@@ -7,7 +7,6 @@ import Slider from "@/component/common/Slider";
 import html2canvas from "html2canvas";
 
 const Editor = () => {
-  const [community, setCommunity] = useState("Grind Nation");
   const [developer, setDeveloper] = useState("Your Name");
   const [twitter, setTwitter] = useState("@yourhandle");
   const [portfolioUrl, setPortfolioUrl] = useState("yourportfolio.com");
@@ -99,12 +98,6 @@ const Editor = () => {
         </div>
 
         <div className="grid gap-5">
-          <Input
-            label="Community name"
-            value={community}
-            onChange={(e) => setCommunity(e.target.value)}
-            placeholder="Grind Nation"
-          />
 
           <Input
             label="Developer name"
@@ -170,7 +163,6 @@ const Editor = () => {
             <Button
               variety="ghost"
               onClick={() => {
-                setCommunity("Grind Nation");
                 setDeveloper("Your Name");
                 setTwitter("@yourhandle");
                 setPortfolioUrl("yourportfolio.com");
@@ -230,7 +222,7 @@ const Editor = () => {
             >
               <div className="p-6 text-white h-full flex flex-col justify-between">
                 <div className="flex justify-between items-start">
-                  <div className="text-2xl font-semibold">{community}</div>
+                  <div className="text-2xl font-semibold">Grind Nation</div>
                   <img src="/blocks.svg" alt="" className="h-6 w-6" />
                 </div>
 
