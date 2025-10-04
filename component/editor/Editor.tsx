@@ -107,7 +107,7 @@ const Editor = () => {
               >
                 <svg
                   className="absolute inset-0 w-full h-full"
-                  style={{ opacity: 0.4 }}
+                  style={{ opacity: 0.5 }}
                 >
                   <defs>
                     <pattern
@@ -237,7 +237,7 @@ const Editor = () => {
                     src="https://res.cloudinary.com/dj98bhfz1/image/upload/v1759025597/image_Edited_2_c5fdt3.avif"
                     alt=""
                     className="w-full h-full object-cover"
-                    style={{ opacity: 0.5 }}
+                    style={{ opacity: 0.75 }}
                   />
                 </div>
                 <div
@@ -249,7 +249,7 @@ const Editor = () => {
                 />
                 <svg
                   className="absolute inset-0 w-full h-full"
-                  style={{ opacity: 0.11 }}
+                  style={{ opacity: 0.15 }}
                 >
                   <defs>
                     <pattern
