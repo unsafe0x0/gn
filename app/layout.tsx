@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
 
 const bodyFont = Inter({
   variable: "--font-geist-sans",
@@ -20,7 +21,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={bodyFont.className}>{children}</body>
+      <body className={bodyFont.className}>
+        <Analytics />
+        {children}
+      </body>
     </html>
   );
 }
