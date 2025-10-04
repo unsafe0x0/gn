@@ -1,86 +1,52 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import Button from "@/component/common/Button";
 import Input from "@/component/common/Input";
 import Dropdown from "@/component/common/Dropdown";
-import Slider from "@/component/common/Slider";
-import html2canvas from "html2canvas";
+import { toPng } from "html-to-image";
 
 const Editor = () => {
-  const [developer, setDeveloper] = useState("Your Name");
-  const [twitter, setTwitter] = useState("@yourhandle");
-  const [portfolioUrl, setPortfolioUrl] = useState("yourportfolio.com");
-  const [variant, setVariant] = useState("normal");
-  const [orientation, setOrientation] = useState("horizontal");
-  const [borderRadius, setBorderRadius] = useState(16);
-  const [gradientIntensity, setGradientIntensity] = useState(60);
+  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [role, setRole] = useState<"admin" | "mod" | "member">("member");
   const cardRef = useRef<HTMLDivElement>(null);
 
+  const uniqueId = useMemo(() => {
+    const ms = Date.now().toString();
+    const last6 = ms.slice(-6);
+    return `GNAT${last6}`;
+  }, []);
+
+  const getRoleColor = () => {
+    switch (role) {
+      case "admin":
+        return "#ef4444";
+      case "mod":
+        return "#3b82f6";
+      case "member":
+        return "#c96442";
+    }
+  };
+
   const exportAsPNG = async () => {
-    if (!cardRef.current) return;
+    if (!cardRef.current || !name.trim() || !username.trim()) {
+      alert("Please fill in all fields");
+      return;
+    }
 
     try {
-      const actualWidth = cardRef.current.offsetWidth;
-      const actualHeight = cardRef.current.offsetHeight;
-      const scale = 2;
-      const canvas = await html2canvas(cardRef.current, {
-        backgroundColor: "#00000000",
-        scale: scale,
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-        width: actualWidth,
-        height: actualHeight,
-        onclone: (clonedDoc) => {
-          const clonedCard = clonedDoc.querySelector(
-            "[data-card-ref]"
-          ) as HTMLElement;
-          if (clonedCard) {
-            clonedCard.style.width = `${actualWidth}px`;
-            clonedCard.style.height = `${actualHeight}px`;
-            clonedCard.style.maxWidth = "none";
-            clonedCard.style.aspectRatio =
-              orientation === "vertical"
-                ? "9/16"
-                : orientation === "square"
-                ? "1/1"
-                : "16/9";
-          }
-        },
+      const dataUrl = await toPng(cardRef.current, {
+        quality: 1.0,
+        pixelRatio: 3,
+        cacheBust: true,
       });
 
-      let finalCanvas = canvas;
-      if (variant === "blackwhite") {
-        const grayCanvas = document.createElement("canvas");
-        grayCanvas.width = canvas.width;
-        grayCanvas.height = canvas.height;
-
-        const ctx = grayCanvas.getContext("2d");
-        if (ctx) {
-          ctx.filter = "grayscale(100%)";
-          ctx.drawImage(canvas, 0, 0);
-        }
-        finalCanvas = grayCanvas;
-      }
-      finalCanvas.toBlob(
-        (blob) => {
-          if (blob) {
-            const link = document.createElement("a");
-            link.download = `grind-nation-card-${developer
-              .replace(/\s+/g, "-")
-              .toLowerCase()}.png`;
-            link.href = URL.createObjectURL(blob);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(link.href);
-          } else {
-            alert("Failed to generate image blob. Please try again.");
-          }
-        },
-        "image/png",
-        1.0
-      );
+      const link = document.createElement("a");
+      link.download = `grind-nation-${username.replace("@", "")}.png`;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (error) {
       console.error("Error exporting PNG:", error);
       alert("Failed to export PNG. Please try again.");
@@ -88,164 +54,548 @@ const Editor = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-10 grid grid-cols-1 md:grid-cols-2 gap-8 px-3">
-      <section aria-label="Card settings" className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold text-pretty">Edit Your Card</h1>
-          <p className="text-sm text-muted-foreground">
-            Create a clean, minimal card from the Grind Nation community.
+    <div className="min-h-screen py-12 px-4">
+      <div className="max-w-4xl mx-auto space-y-8">
+        <div className="text-center space-y-3">
+          <h1 className="text-4xl md:text-5xl font-bold text-neutral-900">
+            Grind Nation Card Generator
+          </h1>
+          <p className="text-lg text-neutral-600">
+            Create your personalized developer card in seconds
           </p>
         </div>
 
-        <div className="grid gap-5">
+        <div className="bg-white rounded-2xl p-8 space-y-6">
+          <div className="grid md:grid-cols-3 gap-6">
+            <Input
+              label="Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="John Doe"
+            />
 
-          <Input
-            label="Developer name"
-            value={developer}
-            onChange={(e) => setDeveloper(e.target.value)}
-            placeholder="Jane Doe"
-          />
+            <Input
+              label="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="@johndoe"
+            />
 
-          <Input
-            label="Twitter username"
-            value={twitter}
-            onChange={(e) => setTwitter(e.target.value)}
-            placeholder="@janedoe"
-          />
-
-          <Input
-            label="Portfolio URL"
-            value={portfolioUrl}
-            onChange={(e) => setPortfolioUrl(e.target.value)}
-            placeholder="yourportfolio.com"
-          />
-
-          <Dropdown
-            label="Variant"
-            options={[
-              { value: "normal", label: "Normal" },
-              { value: "blackwhite", label: "Black & White" },
-            ]}
-            value={variant}
-            onChange={setVariant}
-          />
-
-          <Dropdown
-            label="Orientation"
-            options={[
-              { value: "horizontal", label: "Horizontal" },
-              { value: "vertical", label: "Vertical" },
-              { value: "square", label: "Square" },
-            ]}
-            value={orientation}
-            onChange={setOrientation}
-          />
-
-          <Slider
-            label="Border Radius"
-            value={borderRadius}
-            onChange={setBorderRadius}
-            min={0}
-            max={32}
-            step={1}
-          />
-
-          <Slider
-            label="Gradient Intensity"
-            value={gradientIntensity}
-            onChange={setGradientIntensity}
-            min={0}
-            max={100}
-            step={5}
-          />
-
-          <div className="flex gap-3 pt-2">
-            <Button
-              variety="ghost"
-              onClick={() => {
-                setDeveloper("Your Name");
-                setTwitter("@yourhandle");
-                setPortfolioUrl("yourportfolio.com");
-                setVariant("normal");
-                setOrientation("horizontal");
-                setBorderRadius(16);
-                setGradientIntensity(60);
-              }}
-            >
-              Reset
-            </Button>
+            <Dropdown
+              label="Role"
+              options={[
+                { value: "member", label: "Member" },
+                { value: "mod", label: "Moderator" },
+                { value: "admin", label: "Admin" },
+              ]}
+              value={role}
+              onChange={(val) => setRole(val as "admin" | "mod" | "member")}
+            />
           </div>
         </div>
-      </section>
 
-      <section aria-label="Live preview" className="space-y-4">
-        <div className="flex flex-col space-y-1.5">
-          <h3 className="text-2xl font-semibold text-pretty">Preview</h3>
-        </div>
-        <div className="pt-0 flex items-center justify-center">
-          <div
-            ref={cardRef}
-            data-card-ref
-            className={`relative w-full overflow-hidden ${
-              orientation === "vertical"
-                ? "aspect-[9/16] max-w-[360px]"
-                : orientation === "square"
-                ? "aspect-square max-w-[400px]"
-                : "aspect-[16/9] max-w-[640px]"
-            }`}
-            style={{ borderRadius: `${borderRadius}px` }}
-          >
-            <img
-              src={
-                orientation === "vertical"
-                  ? "https://res.cloudinary.com/dj98bhfz1/image/upload/v1759025599/image_Edited_svjwuq.png"
-                  : orientation === "square"
-                  ? "https://res.cloudinary.com/dj98bhfz1/image/upload/v1759025597/image_Edited_3_iw2etm.png"
-                  : "https://res.cloudinary.com/dj98bhfz1/image/upload/v1759025597/image_Edited_2_c5fdt3.png"
-              }
-              alt="Card background"
-              className="w-full h-full object-cover"
-              style={{
-                filter: variant === "blackwhite" ? "grayscale(100%)" : "none",
-              }}
-            />
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  orientation === "vertical"
-                    ? `linear-gradient(to top, rgba(0,0,0,${0.8 * (gradientIntensity / 100)}) 0%, rgba(0,0,0,${0.5 * (gradientIntensity / 100)}) 60%, rgba(0,0,0,${0.2 * (gradientIntensity / 100)}) 100%)`
-                    : orientation === "square"
-                    ? `linear-gradient(135deg, rgba(0,0,0,${0.8 * (gradientIntensity / 100)}) 0%, rgba(0,0,0,${0.5 * (gradientIntensity / 100)}) 50%, rgba(0,0,0,${0.2 * (gradientIntensity / 100)}) 100%)`
-                    : `linear-gradient(to right, rgba(0,0,0,${0.8 * (gradientIntensity / 100)}) 0%, rgba(0,0,0,${0.5 * (gradientIntensity / 100)}) 60%, rgba(0,0,0,${0.2 * (gradientIntensity / 100)}) 100%)`,
-              }}
-            >
-              <div className="p-6 text-white h-full flex flex-col justify-between">
-                <div className="flex justify-between items-start">
-                  <div className="text-2xl font-semibold">Grind Nation</div>
-                  <img src="/blocks.svg" alt="" className="h-6 w-6" />
+        {(name.trim() || username.trim()) && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-center">
+              <div
+                ref={cardRef}
+                className="relative w-full max-w-3xl aspect-[16/9] rounded-2xl overflow-hidden"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)",
+                }}
+              >
+                <svg
+                  className="absolute inset-0 w-full h-full"
+                  style={{ opacity: 0.4 }}
+                >
+                  <defs>
+                    <pattern
+                      id="circuit"
+                      x="0"
+                      y="0"
+                      width="200"
+                      height="200"
+                      patternUnits="userSpaceOnUse"
+                    >
+                      <path
+                        d="M 0 50 L 60 50"
+                        stroke="#FFD700"
+                        strokeWidth="1.5"
+                        fill="none"
+                      />
+                      <path
+                        d="M 80 50 L 200 50"
+                        stroke="#FFD700"
+                        strokeWidth="1.5"
+                        fill="none"
+                      />
+                      <path
+                        d="M 0 100 L 40 100"
+                        stroke="#DAA520"
+                        strokeWidth="1.5"
+                        fill="none"
+                      />
+                      <path
+                        d="M 60 100 L 140 100"
+                        stroke="#DAA520"
+                        strokeWidth="1.5"
+                        fill="none"
+                      />
+                      <path
+                        d="M 160 100 L 200 100"
+                        stroke="#DAA520"
+                        strokeWidth="1.5"
+                        fill="none"
+                      />
+                      <path
+                        d="M 0 150 L 80 150"
+                        stroke="#FFD700"
+                        strokeWidth="1.5"
+                        fill="none"
+                      />
+                      <path
+                        d="M 100 150 L 200 150"
+                        stroke="#FFD700"
+                        strokeWidth="1.5"
+                        fill="none"
+                      />
+                      <path
+                        d="M 50 0 L 50 40"
+                        stroke="#FFD700"
+                        strokeWidth="1.5"
+                        fill="none"
+                      />
+                      <path
+                        d="M 50 60 L 50 90"
+                        stroke="#FFD700"
+                        strokeWidth="1.5"
+                        fill="none"
+                      />
+                      <path
+                        d="M 50 110 L 50 200"
+                        stroke="#FFD700"
+                        strokeWidth="1.5"
+                        fill="none"
+                      />
+                      <path
+                        d="M 100 0 L 100 80"
+                        stroke="#DAA520"
+                        strokeWidth="1.5"
+                        fill="none"
+                      />
+                      <path
+                        d="M 100 120 L 100 200"
+                        stroke="#DAA520"
+                        strokeWidth="1.5"
+                        fill="none"
+                      />
+                      <path
+                        d="M 150 0 L 150 50"
+                        stroke="#FFD700"
+                        strokeWidth="1.5"
+                        fill="none"
+                      />
+                      <path
+                        d="M 150 70 L 150 130"
+                        stroke="#FFD700"
+                        strokeWidth="1.5"
+                        fill="none"
+                      />
+                      <path
+                        d="M 150 150 L 150 200"
+                        stroke="#FFD700"
+                        strokeWidth="1.5"
+                        fill="none"
+                      />
+                      <circle cx="50" cy="50" r="3" fill="#FFD700" />
+                      <circle cx="100" cy="100" r="3" fill="#FFD700" />
+                      <circle cx="150" cy="150" r="3" fill="#FFD700" />
+                      <circle cx="50" cy="100" r="2.5" fill="#DAA520" />
+                      <circle cx="100" cy="50" r="2.5" fill="#DAA520" />
+                      <circle cx="150" cy="50" r="2.5" fill="#FFD700" />
+                      <path
+                        d="M 50 50 L 100 100"
+                        stroke="#FFD700"
+                        strokeWidth="1"
+                        fill="none"
+                        opacity="0.6"
+                      />
+                      <path
+                        d="M 100 100 L 150 150"
+                        stroke="#FFD700"
+                        strokeWidth="1"
+                        fill="none"
+                        opacity="0.6"
+                      />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#circuit)" />
+                </svg>
+                <div className="absolute inset-0">
+                  <img
+                    src="https://res.cloudinary.com/dj98bhfz1/image/upload/v1759025597/image_Edited_2_c5fdt3.avif"
+                    alt=""
+                    className="w-full h-full object-cover"
+                    style={{ opacity: 0.5 }}
+                  />
                 </div>
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      "linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.5) 100%)",
+                  }}
+                />
+                <svg
+                  className="absolute inset-0 w-full h-full"
+                  style={{ opacity: 0.11 }}
+                >
+                  <defs>
+                    <pattern
+                      id="binaryRain"
+                      x="0"
+                      y="0"
+                      width="100"
+                      height="100"
+                      patternUnits="userSpaceOnUse"
+                    >
+                      <text
+                        x="10"
+                        y="15"
+                        fill="#00ff00"
+                        fontSize="10"
+                        fontFamily="monospace"
+                        opacity="0.8"
+                      >
+                        1
+                      </text>
+                      <text
+                        x="10"
+                        y="30"
+                        fill="#00ff00"
+                        fontSize="10"
+                        fontFamily="monospace"
+                        opacity="0.6"
+                      >
+                        0
+                      </text>
+                      <text
+                        x="10"
+                        y="45"
+                        fill="#00ff00"
+                        fontSize="10"
+                        fontFamily="monospace"
+                        opacity="0.5"
+                      >
+                        1
+                      </text>
+                      <text
+                        x="10"
+                        y="60"
+                        fill="#00ff00"
+                        fontSize="10"
+                        fontFamily="monospace"
+                        opacity="0.4"
+                      >
+                        1
+                      </text>
+                      <text
+                        x="10"
+                        y="75"
+                        fill="#00ff00"
+                        fontSize="10"
+                        fontFamily="monospace"
+                        opacity="0.3"
+                      >
+                        0
+                      </text>
+                      <text
+                        x="10"
+                        y="90"
+                        fill="#00ff00"
+                        fontSize="10"
+                        fontFamily="monospace"
+                        opacity="0.2"
+                      >
+                        1
+                      </text>
 
-                <div className="space-y-2">
-                  <h2 className="text-xl font-semibold leading-tight">
-                    {developer}
-                  </h2>
+                      <text
+                        x="35"
+                        y="25"
+                        fill="#00ff00"
+                        fontSize="10"
+                        fontFamily="monospace"
+                        opacity="0.7"
+                      >
+                        0
+                      </text>
+                      <text
+                        x="35"
+                        y="40"
+                        fill="#00ff00"
+                        fontSize="10"
+                        fontFamily="monospace"
+                        opacity="0.6"
+                      >
+                        1
+                      </text>
+                      <text
+                        x="35"
+                        y="55"
+                        fill="#00ff00"
+                        fontSize="10"
+                        fontFamily="monospace"
+                        opacity="0.5"
+                      >
+                        0
+                      </text>
+                      <text
+                        x="35"
+                        y="70"
+                        fill="#00ff00"
+                        fontSize="10"
+                        fontFamily="monospace"
+                        opacity="0.4"
+                      >
+                        1
+                      </text>
+                      <text
+                        x="35"
+                        y="85"
+                        fill="#00ff00"
+                        fontSize="10"
+                        fontFamily="monospace"
+                        opacity="0.3"
+                      >
+                        1
+                      </text>
 
-                  <div className="space-y-1 text-sm">
-                    <div>{twitter}</div>
-                    <div>{portfolioUrl}</div>
+                      <text
+                        x="60"
+                        y="10"
+                        fill="#00ff00"
+                        fontSize="10"
+                        fontFamily="monospace"
+                        opacity="0.8"
+                      >
+                        1
+                      </text>
+                      <text
+                        x="60"
+                        y="25"
+                        fill="#00ff00"
+                        fontSize="10"
+                        fontFamily="monospace"
+                        opacity="0.6"
+                      >
+                        1
+                      </text>
+                      <text
+                        x="60"
+                        y="40"
+                        fill="#00ff00"
+                        fontSize="10"
+                        fontFamily="monospace"
+                        opacity="0.5"
+                      >
+                        0
+                      </text>
+                      <text
+                        x="60"
+                        y="55"
+                        fill="#00ff00"
+                        fontSize="10"
+                        fontFamily="monospace"
+                        opacity="0.4"
+                      >
+                        0
+                      </text>
+                      <text
+                        x="60"
+                        y="70"
+                        fill="#00ff00"
+                        fontSize="10"
+                        fontFamily="monospace"
+                        opacity="0.3"
+                      >
+                        1
+                      </text>
+                      <text
+                        x="60"
+                        y="85"
+                        fill="#00ff00"
+                        fontSize="10"
+                        fontFamily="monospace"
+                        opacity="0.2"
+                      >
+                        0
+                      </text>
+
+                      <text
+                        x="85"
+                        y="20"
+                        fill="#00ff00"
+                        fontSize="10"
+                        fontFamily="monospace"
+                        opacity="0.7"
+                      >
+                        0
+                      </text>
+                      <text
+                        x="85"
+                        y="35"
+                        fill="#00ff00"
+                        fontSize="10"
+                        fontFamily="monospace"
+                        opacity="0.6"
+                      >
+                        1
+                      </text>
+                      <text
+                        x="85"
+                        y="50"
+                        fill="#00ff00"
+                        fontSize="10"
+                        fontFamily="monospace"
+                        opacity="0.5"
+                      >
+                        1
+                      </text>
+                      <text
+                        x="85"
+                        y="65"
+                        fill="#00ff00"
+                        fontSize="10"
+                        fontFamily="monospace"
+                        opacity="0.4"
+                      >
+                        0
+                      </text>
+                      <text
+                        x="85"
+                        y="80"
+                        fill="#00ff00"
+                        fontSize="10"
+                        fontFamily="monospace"
+                        opacity="0.3"
+                      >
+                        1
+                      </text>
+                      <text
+                        x="85"
+                        y="95"
+                        fill="#00ff00"
+                        fontSize="10"
+                        fontFamily="monospace"
+                        opacity="0.2"
+                      >
+                        0
+                      </text>
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#binaryRain)" />
+                </svg>
+                <div className="absolute top-5 right-5">
+                  <img src="/blocks.svg" alt="Blocks" className="w-8 h-8" />
+                </div>
+                <div className="absolute bottom-5 right-5">
+                  <div className="text-xs sm:text-sm font-mono text-neutral-500 tracking-wider">
+                    {uniqueId}
+                  </div>
+                </div>
+                <div className="relative h-full flex items-center justify-center p-4 sm:p-8 md:p-12">
+                  <div className="flex-1 max-w-2xl space-y-3 sm:space-y-4 md:space-y-6">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div
+                        className="text-xs sm:text-sm font-bold tracking-wider uppercase"
+                        style={{ color: getRoleColor() }}
+                      >
+                        Grind Nation
+                      </div>
+                      <div className="h-3 sm:h-4 w-px bg-neutral-600" />
+                      <div className="text-xs sm:text-sm text-neutral-400 capitalize">
+                        {role}
+                      </div>
+                    </div>
+                    <div className="space-y-2 sm:space-y-3">
+                      <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white tracking-tight">
+                        {name || "Your Name"}
+                      </h2>
+                      <p
+                        className="text-lg sm:text-xl font-medium"
+                        style={{ color: getRoleColor() }}
+                      >
+                        @{username || "username"}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 pt-2 sm:pt-3 md:pt-4">
+                      <div className="h-1 sm:h-1.5 w-8 sm:w-12 bg-[#ef4444] rounded-full" />
+                      <div className="h-1 sm:h-1.5 w-8 sm:w-12 bg-[#3b82f6] rounded-full" />
+                      <div className="h-1 sm:h-1.5 w-4 sm:w-6 bg-[#c96442] rounded-full" />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
+            <div className="flex justify-center">
+              <Button
+                className="px-12 py-3 text-lg"
+                onClick={exportAsPNG}
+                disabled={!name.trim() || !username.trim()}
+              >
+                Download Card
+              </Button>
+            </div>
           </div>
-        </div>
-        <div className="flex">
-          <Button className="w-full" onClick={exportAsPNG}>
-            Export as PNG
-          </Button>
-        </div>
-      </section>
+        )}
+
+        {!name.trim() && !username.trim() && (
+          <div className="bg-white rounded-2xl p-8 space-y-4">
+            <h3 className="text-xl font-semibold text-neutral-900">
+              How it works
+            </h3>
+            <ul className="space-y-3 text-neutral-700">
+              <li className="flex gap-3">
+                <span className="text-[#c96442] font-bold">1.</span>
+                <span>Enter your name and username</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-[#c96442] font-bold">2.</span>
+                <span>Select your role (Member, Moderator, or Admin)</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-[#c96442] font-bold">3.</span>
+                <span>Preview your card in real-time</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-[#c96442] font-bold">4.</span>
+                <span>Download your personalized Grind Nation card!</span>
+              </li>
+            </ul>
+            <div className="pt-4 space-y-2">
+              <p className="text-sm font-semibold text-neutral-800">
+                Role Colors:
+              </p>
+              <div className="flex gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-[#c96442]"></div>
+                  <span className="text-sm text-neutral-600">Member</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-[#3b82f6]"></div>
+                  <span className="text-sm text-neutral-600">Moderator</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-[#ef4444]"></div>
+                  <span className="text-sm text-neutral-600">Admin</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
