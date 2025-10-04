@@ -24,7 +24,7 @@ const Button = ({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`px-4 py-2 rounded-md text-base font-normal transition-colors duration-200 cursor-pointer ${className} ${varietyClasses[variety]}`}
+      className={`inline-flex items-center gap-2 px-4 py-2 transition-colors text-sm font-medium rounded-lg cursor-pointer ${className} ${varietyClasses[variety]}`}
     >
       {children}
     </button>
