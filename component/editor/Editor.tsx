@@ -71,14 +71,14 @@ const Editor = () => {
               label="Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="John Doe"
+              placeholder="Your Name"
             />
 
             <Input
               label="Username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="@johndoe"
+              placeholder="@username"
             />
 
             <Dropdown
