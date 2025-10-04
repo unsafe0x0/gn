@@ -17,7 +17,7 @@ const HowItWorks = () => {
         </li>
         <li className="flex gap-3">
           <span className="text-[#c96442] font-bold">3.</span>
-          <span>Preview your card in real-time</span>
+          <span>Preview your card in real time</span>
         </li>
         <li className="flex gap-3">
           <span className="text-[#c96442] font-bold">4.</span>

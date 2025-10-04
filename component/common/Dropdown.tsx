@@ -28,10 +28,12 @@ const Dropdown = ({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -42,7 +44,6 @@ const Dropdown = ({
     };
   }, []);
 
-  // Close dropdown on Escape key
   useEffect(() => {
     const handleEscapeKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -58,7 +59,7 @@ const Dropdown = ({
     }
   }, [isOpen]);
 
-  const selectedOption = options.find(option => option.value === value);
+  const selectedOption = options.find((option) => option.value === value);
 
   const handleToggle = () => {
     if (!disabled) {
@@ -85,7 +86,6 @@ const Dropdown = ({
         if (!isOpen) {
           setIsOpen(true);
         } else {
-          // Focus next option logic could be added here
         }
         break;
       case "ArrowUp":
@@ -93,7 +93,6 @@ const Dropdown = ({
         if (!isOpen) {
           setIsOpen(true);
         } else {
-          // Focus previous option logic could be added here
         }
         break;
     }
@@ -108,14 +107,15 @@ const Dropdown = ({
         <button
           type="button"
           className={`
-            w-full border border-neutral-300 bg-[#faf9f5] rounded-md p-2 text-left
+            w-full border border-neutral-300 bg-[#faf9f5] rounded-lg p-2 text-left
             text-sm font-normal transition-colors duration-200
             flex items-center justify-between outline-none
-            ${disabled 
-              ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed' 
-              : 'hover:border-neutral-400 focus:border-[#c96442] cursor-pointer'
+            ${
+              disabled
+                ? "bg-neutral-100 text-neutral-400 cursor-not-allowed"
+                : "hover:border-neutral-400 focus:border-[#c96442] cursor-pointer"
             }
-            ${isOpen ? 'border-[#c96442]' : ''}
+            ${isOpen ? "border-[#c96442]" : ""}
           `}
           onClick={handleToggle}
           onKeyDown={handleKeyDown}
@@ -124,7 +124,9 @@ const Dropdown = ({
           aria-expanded={isOpen}
           aria-labelledby={label ? undefined : "dropdown-button"}
         >
-          <span className={selectedOption ? 'text-neutral-900' : 'text-neutral-500'}>
+          <span
+            className={selectedOption ? "text-neutral-900" : "text-neutral-500"}
+          >
             {selectedOption ? selectedOption.label : placeholder}
           </span>
           {isOpen ? (
@@ -135,10 +137,10 @@ const Dropdown = ({
         </button>
 
         {isOpen && (
-          <div 
+          <div
             className="
               absolute top-full left-0 right-0 z-50 mt-1
-              bg-white border border-neutral-300 rounded-md shadow-lg
+              bg-white border border-neutral-300 rounded-lg shadow-lg
               max-h-60 overflow-y-auto
             "
             role="listbox"
@@ -150,9 +152,10 @@ const Dropdown = ({
                 className={`
                   w-full text-left px-3 py-2 text-sm transition-colors duration-150
                   hover:bg-neutral-100 focus:bg-neutral-100 focus:outline-none
-                  ${option.value === value 
-                    ? 'bg-neutral-50 text-neutral-900 font-medium' 
-                    : 'text-neutral-700'
+                  ${
+                    option.value === value
+                      ? "bg-neutral-50 text-neutral-900 font-medium"
+                      : "text-neutral-700"
                   }
                   first:rounded-t-md last:rounded-b-md
                 `}
