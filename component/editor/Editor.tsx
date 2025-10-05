@@ -79,7 +79,10 @@ const Editor = () => {
             <Input
               label="Username"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setUsername(val.startsWith("@") ? val.slice(1) : val);
+              }}
               placeholder="@username"
             />
 
@@ -500,7 +503,11 @@ const Editor = () => {
                   <rect width="100%" height="100%" fill="url(#binaryRain)" />
                 </svg>
                 <div className="absolute top-5 right-5">
-                  <img src="/blocks.svg" alt="Blocks" className="w-8 h-8 opacity-90" />
+                  <img
+                    src="/blocks.svg"
+                    alt="Blocks"
+                    className="w-8 h-8 opacity-90"
+                  />
                 </div>
                 <div className="absolute bottom-5 right-5">
                   <div className="text-xs sm:text-sm font-mono text-neutral-500 tracking-wider">
